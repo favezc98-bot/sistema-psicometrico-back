@@ -2,6 +2,7 @@ package com.psicometria.service;
 
 import com.psicometria.conexion.ConexionBD;
 import com.psicometria.model.RequestLogin;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,7 +14,7 @@ public class UsuarioService {
         String sql = "SELECT password FROM usuarios WHERE correo = ? AND activo = 1";
 
         try {
-            // 1. Abrimos la conexión de forma directa
+            //Abrimos la conexión de forma directa
             Connection conexion = ConexionBD.obtenerConexion();
             PreparedStatement pstmt = conexion.prepareStatement(sql);
 
@@ -32,7 +33,7 @@ public class UsuarioService {
                 conexion.close();
 
                 // Comparamos la contraseña
-                return passwordHashBD.equals(request.getPassword());
+                return BCrypt.checkpw(request.getPassword(), passwordHashBD);
             }
 
             // Cerramos si no entró al if
