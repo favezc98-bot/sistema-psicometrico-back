@@ -6,14 +6,9 @@ import java.sql.SQLException;
 
 public class ConexionBD {
 
-    // Extraído de panel de Aiven
-    private static final String PARTE_1 = "AVNS_90ICDI";
-    private static final String PARTE_2 = "jqgS1Bf4Te9SO";
-    private static final String PASSWORD = PARTE_1 + PARTE_2;
-
-    //configuraciones de conexiones
     private static final String URL = "jdbc:mariadb://mysql-1fa2a584-fav-0ce2.c.aivencloud.com:14905/defaultdb?sslMode=REQUIRED&trustServerCertificate=true";
     private static final String USUARIO = "avnadmin";
+    private static final String PASSWORD = "AVNS_yfPzuOPiSj5pl1GzpNN"; // Tu contraseña nueva
 
     public static Connection obtenerConexion() {
         Connection conexion = null;
