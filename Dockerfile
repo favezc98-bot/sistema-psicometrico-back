@@ -7,9 +7,10 @@ RUN mvn clean package -DskipTests
 # 2. Etapa de ejecución final
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
 
-# Render asigna el puerto dinámicamente mediante la variable PORT, Spring Boot usa el 8080 por defecto
+# Copiamos el JAR que incluye todas las dependencias (Jackson, MariaDB, etc.)
+COPY --from=build /app/target/*-jar-with-dependencies.jar app.jar
+
 EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
