@@ -11,6 +11,9 @@ WORKDIR /app
 # Copia el Fat JAR generado por el assembly plugin que contiene todas las dependencias
 COPY --from=build /app/target/*-jar-with-dependencies.jar app.jar
 
+# Variable de entorno con la contraseña para la base de datos en Aiven
+ENV DB_PASSWORD=AVNS_90ICDIjqgS1Bf4Te9SO
+
 EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

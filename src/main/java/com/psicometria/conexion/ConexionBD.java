@@ -9,7 +9,7 @@ public class ConexionBD {
     // Extraído de tu panel de Aiven
     private static final String URL = "jdbc:mariadb://mysql-1fa2a584-fav-0ce2.c.aivencloud.com:14905/defaultdb?sslMode=REQUIRED&trustServerCertificate=true";
     private static final String USUARIO = "avnadmin";
-    private static final String PASSWORD = "AVNS_90ICDIjqgS1Bf4Te9SO";
+    private static final String PASSWORD = System.getenv("DB_PASSWORD");
 
     public static Connection obtenerConexion() {
         Connection conexion = null;
