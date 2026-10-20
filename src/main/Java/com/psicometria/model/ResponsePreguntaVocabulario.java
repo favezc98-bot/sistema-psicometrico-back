@@ -1,6 +1,6 @@
 package com.psicometria.model;
 
-public class ResponsePregunta {
+public class ResponsePreguntaVocabulario {
 
     private int idPreguntaTest;
     private String tipoTest;
@@ -10,8 +10,10 @@ public class ResponsePregunta {
     // Getters y Setters
     public int getIdPreguntaTest() {
         return idPreguntaTest;
+
     }
     public void setIdPreguntaTest(int idPreguntaTest) {
+
         this.idPreguntaTest = idPreguntaTest;
     }
 

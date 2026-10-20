@@ -2,9 +2,9 @@ package com.psicometria.admin;
 
 import com.fasterxml.jackson.databind.ObjectMapper; // <-- Importante
 import com.psicometria.controller.LoginController;
-import com.psicometria.model.RequestLogin;
-import com.psicometria.model.ResponsePregunta;
+import com.psicometria.model.*;
 import com.psicometria.service.PreguntaService;
+import com.psicometria.service.RespuestaService;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpExchange;
@@ -26,8 +26,18 @@ public class PsicometriaAplicacion {
         servidor.createContext("/api/login", new HttpHandler() {
             @Override
             public void handle(HttpExchange exchange) throws IOException {
+                //Configurar cabeceras CORS completas para cualquier método
                 exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, OPTIONS");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
 
+                //Responder a la peticion previa OPTIONS (Pre-flight del navegador)
+                if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                    exchange.sendResponseHeaders(204, -1);
+                    return;
+                }
+
+                //Procesar la petición POST habitual
                 if ("POST".equalsIgnoreCase(exchange.getRequestMethod())) {
 
                     // Leemos el JSON y dejamos que Jackson lo mapee automáticamente al objeto RequestLogin
@@ -54,17 +64,101 @@ public class PsicometriaAplicacion {
         });
 
         // --- ENDPOINT PREGUNTAS ---
-        servidor.createContext("/api/preguntas", new HttpHandler() {
+        servidor.createContext("/api/preguntas_vocabulario", new HttpHandler() {
             @Override
             public void handle(HttpExchange exchange) throws IOException {
                 exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
 
                 if ("GET".equalsIgnoreCase(exchange.getRequestMethod())) {
                     PreguntaService servicio = new PreguntaService();
-                    List<ResponsePregunta> preguntas = servicio.obtenerTodas();
+                    List<ResponsePreguntaVocabulario> preguntas = servicio.obtenerTodas();
 
-                    // ¡Adiós al StringBuilder manual! Jackson convierte la lista a JSON por ti de inmediato.
+                    //StringBuilder manual Jackson convierte la lista a json.
                     String respuestaJson = objectMapper.writeValueAsString(preguntas);
+
+                    exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+                    exchange.sendResponseHeaders(200, respuestaJson.getBytes(StandardCharsets.UTF_8).length);
+
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(respuestaJson.getBytes(StandardCharsets.UTF_8));
+                    os.close();
+                }
+            }
+        });
+
+        // --- ENDPOINT RESPUESTAS ---
+        servidor.createContext("/api/respuestas_vocabulario", new HttpHandler() {
+            @Override
+            public void handle(HttpExchange exchange) throws IOException {
+                // Cabecera CORS para permitir la conexión con el frontend
+                exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+
+                // Permitir solicitudes OPTIONS para el pre-flight de CORS si es necesario
+                if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                    exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, OPTIONS");
+                    exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
+                    exchange.sendResponseHeaders(204, -1);
+                    return;
+                }
+
+                if ("GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+                    RespuestaService servicio = new RespuestaService();
+                    List<ResponseRespuestaVocabulario> respuestas = servicio.obtenerRespuestasVocabulario();
+
+                    // Jackson convierte la lista de objetos Java a un formato JSON limpio automáticamente
+                    String respuestaJson = objectMapper.writeValueAsString(respuestas);
+
+                    exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+                    exchange.sendResponseHeaders(200, respuestaJson.getBytes(StandardCharsets.UTF_8).length);
+
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(respuestaJson.getBytes(StandardCharsets.UTF_8));
+                    os.close();
+                }
+            }
+        });
+
+        servidor.createContext("/api/preguntas_abstraccion", new HttpHandler() {
+            @Override
+            public void handle(HttpExchange exchange) throws IOException {
+                exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+
+                if ("GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+                    PreguntaService servicio = new PreguntaService();
+                    List<ResponsePreguntaAbstraccion> preguntas = servicio.obtenerPreguntasAbstraccion();
+
+                    //StringBuilder manual, Jackson convierte la lista a JSON.
+                    String respuestaJson = objectMapper.writeValueAsString(preguntas);
+
+                    exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+                    exchange.sendResponseHeaders(200, respuestaJson.getBytes(StandardCharsets.UTF_8).length);
+
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(respuestaJson.getBytes(StandardCharsets.UTF_8));
+                    os.close();
+                }
+            }
+        });
+
+        servidor.createContext("/api/respuestas_abstraccion", new HttpHandler() {
+            @Override
+            public void handle(HttpExchange exchange) throws IOException {
+                // Cabecera CORS para permitir la conexión con el frontend
+                exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+
+                // Permitir solicitudes OPTIONS para el pre-flight de CORS si es necesario
+                if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                    exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, OPTIONS");
+                    exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
+                    exchange.sendResponseHeaders(204, -1);
+                    return;
+                }
+
+                if ("GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+                    RespuestaService servicio = new RespuestaService();
+                    List<ResponseRespuestaAbstraccion> respuestas = servicio.obtenerRespuestasAbstraccion();
+                    // Jackson convierte la lista de objetos Java a un formato JSON limpio automáticamente
+                    String respuestaJson = objectMapper.writeValueAsString(respuestas);
 
                     exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
                     exchange.sendResponseHeaders(200, respuestaJson.getBytes(StandardCharsets.UTF_8).length);
