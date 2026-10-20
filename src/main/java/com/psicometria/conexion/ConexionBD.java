@@ -6,9 +6,10 @@ import java.sql.SQLException;
 
 public class ConexionBD {
 
-    private static final String URL = "jdbc:mariadb://127.0.0.1:3308/psicometria_db";
-    private static final String USUARIO = "root";
-    private static final String PASSWORD = "";
+    // Extraído de tu panel de Aiven
+    private static final String URL = "jdbc:mariadb://mysql-1fa2a584-fav-0ce2.c.aivencloud.com:14905/defaultdb?sslMode=REQUIRED&trustServerCertificate=true";
+    private static final String USUARIO = "avnadmin";
+    private static final String PASSWORD = "AVNS_90ICDIjqgS1Bf4Te9SO";
 
     public static Connection obtenerConexion() {
         Connection conexion = null;
@@ -18,7 +19,7 @@ public class ConexionBD {
         } catch (ClassNotFoundException e) {
             System.err.println("Error: No se encontró el Driver de MariaDB -> " + e.getMessage());
         } catch (SQLException e) {
-            System.err.println("Error al conectar a psicometria_db -> " + e.getMessage());
+            System.err.println("Error al conectar a la base de datos en Aiven -> " + e.getMessage());
         }
         return conexion;
     }
