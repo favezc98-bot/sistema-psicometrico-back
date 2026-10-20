@@ -1,0 +1,16 @@
+com\psicometria\model\ResponseRespuestaVocabulario.class
+com\psicometria\admin\PsicometriaAplicacion$5.class
+com\psicometria\admin\PsicometriaAplicacion$1.class
+com\psicometria\service\UsuarioService.class
+com\psicometria\controller\LoginController.class
+com\psicometria\service\PreguntaService.class
+com\psicometria\admin\PsicometriaAplicacion$2.class
+com\psicometria\admin\PsicometriaAplicacion$3.class
+com\psicometria\model\RequestLogin.class
+com\psicometria\model\ResponsePreguntaAbstraccion.class
+com\psicometria\admin\PsicometriaAplicacion$4.class
+com\psicometria\model\ResponseRespuestaAbstraccion.class
+com\psicometria\admin\PsicometriaAplicacion.class
+com\psicometria\model\ResponsePreguntaVocabulario.class
+com\psicometria\conexion\ConexionBD.class
+com\psicometria\service\RespuestaService.class
