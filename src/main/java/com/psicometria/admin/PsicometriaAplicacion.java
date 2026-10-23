@@ -240,6 +240,7 @@ public class PsicometriaAplicacion {
             }
         });
 
+        //Rutas de servicios creados
         servidor.createContext("/api/evaluacion/buscar", new BuscarCandidatoController());
         servidor.createContext("/api/evaluacion/asignar", new AsignarEvaluacionController());
         servidor.createContext("/api/evaluacion/combinacion-activa", new ObtenerCombinacionController());
