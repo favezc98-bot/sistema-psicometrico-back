@@ -1,7 +1,10 @@
 package com.psicometria.admin;
 
 import com.fasterxml.jackson.databind.ObjectMapper; // <-- Importante
+import com.psicometria.controller.AsignarEvaluacionController;
+import com.psicometria.controller.BuscarCandidatoController;
 import com.psicometria.controller.LoginController;
+import com.psicometria.controller.ObtenerCombinacionController;
 import com.psicometria.model.*;
 import com.psicometria.service.PreguntaService;
 import com.psicometria.service.RespuestaService;
@@ -47,10 +50,12 @@ public class PsicometriaAplicacion {
                     );
 
                     LoginController controller = new LoginController();
-                    boolean acceso = controller.autenticar(request);
+                    ResponseConsultarUsuario usuario = controller.autenticar(request);
+
+                    boolean acceso = (usuario != null);
 
                     String respuesta = acceso
-                            ? "{\"status\": \"success\", \"mensaje\": \"Acceso concedido\"}"
+                            ? "{\"status\": \"success\", \"mensaje\": \"Acceso concedido\", \"idUsuario\": " + usuario.getIdUsuario() + ", \"idRol\": " + usuario.getIdRolFk() + "}"
                             : "{\"status\": \"error\", \"mensaje\": \"Credenciales incorrectas\"}";
 
                     exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
@@ -123,11 +128,17 @@ public class PsicometriaAplicacion {
             public void handle(HttpExchange exchange) throws IOException {
                 exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
 
+                if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                    exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, OPTIONS");
+                    exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
+                    exchange.sendResponseHeaders(204, -1);
+                    return;
+                }
+
                 if ("GET".equalsIgnoreCase(exchange.getRequestMethod())) {
                     PreguntaService servicio = new PreguntaService();
                     List<ResponsePreguntaAbstraccion> preguntas = servicio.obtenerPreguntasAbstraccion();
 
-                    //StringBuilder manual, Jackson convierte la lista a JSON.
                     String respuestaJson = objectMapper.writeValueAsString(preguntas);
 
                     exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
@@ -169,6 +180,69 @@ public class PsicometriaAplicacion {
                 }
             }
         });
+
+        servidor.createContext("/api/preguntas_bloque", new HttpHandler() {
+            @Override
+            public void handle(HttpExchange exchange) throws IOException {
+                exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+
+                if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                    exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, OPTIONS");
+                    exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
+                    exchange.sendResponseHeaders(204, -1);
+                    return;
+                }
+
+                if ("GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+                    PreguntaService servicio = new PreguntaService();
+                    List<ResponsePreguntaBloque> preguntaBloque = servicio.obtenerPreguntasBloque();
+
+                    String respuestaJson = objectMapper.writeValueAsString(preguntaBloque);
+
+                    exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+                    exchange.sendResponseHeaders(200, respuestaJson.getBytes(StandardCharsets.UTF_8).length);
+
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(respuestaJson.getBytes(StandardCharsets.UTF_8));
+                    os.close();
+                }
+            }
+        });
+
+        servidor.createContext("/api/respuestas_bloque", new HttpHandler() {
+            @Override
+            public void handle(HttpExchange exchange) throws IOException {
+                // Cabecera CORS para permitir la conexión con el frontend
+                exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+
+                // Permitir solicitudes OPTIONS para el pre-flight de CORS si es necesario
+                if ("OPTIONS".equalsIgnoreCase(exchange.getRequestMethod())) {
+                    exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, OPTIONS");
+                    exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
+                    exchange.sendResponseHeaders(204, -1);
+                    return;
+                }
+
+                if ("GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+                    RespuestaService servicio = new RespuestaService();
+                    List<ResponseRespuestaBloque> respuestasBloque = servicio.obtenerRespuestasBloque();
+
+                    // Jackson convierte la lista de objetos Java a un formato JSON limpio automáticamente
+                    String respuestaJson = objectMapper.writeValueAsString(respuestasBloque);
+
+                    exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+                    exchange.sendResponseHeaders(200, respuestaJson.getBytes(StandardCharsets.UTF_8).length);
+
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(respuestaJson.getBytes(StandardCharsets.UTF_8));
+                    os.close();
+                }
+            }
+        });
+
+        servidor.createContext("/api/evaluacion/buscar", new BuscarCandidatoController());
+        servidor.createContext("/api/evaluacion/asignar", new AsignarEvaluacionController());
+        servidor.createContext("/api/evaluacion/combinacion-activa", new ObtenerCombinacionController());
 
         servidor.setExecutor(null);
         servidor.start();
