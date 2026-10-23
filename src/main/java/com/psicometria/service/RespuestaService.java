@@ -2,6 +2,7 @@ package com.psicometria.service;
 
 import com.psicometria.conexion.ConexionBD;
 import com.psicometria.model.ResponseRespuestaAbstraccion;
+import com.psicometria.model.ResponseRespuestaBloque;
 import com.psicometria.model.ResponseRespuestaVocabulario;
 
 import java.sql.Connection;
@@ -71,5 +72,37 @@ public class RespuestaService {
             System.out.println("Error al consultar respuestas de abstraccion");
         }
         return respuestaAbstraccionList;
+    }
+
+    public List<ResponseRespuestaBloque> obtenerRespuestasBloque() {
+        List<ResponseRespuestaBloque> responseRespuestaBloqueList = new ArrayList<>();
+
+        //JOIN con pregunta_test filtrando por VOCABULARIO
+        String sql = "SELECT r.id_respuesta_test, r.id_pregunta_test, r.opcion, r.respuesta, r.valida " +
+                "FROM respuesta_test r " +
+                "JOIN pregunta_test p ON r.id_pregunta_test = p.id_pregunta_test " +
+                "WHERE p.tipo_test = ?";
+
+        try (Connection conexion = ConexionBD.obtenerConexion();
+             PreparedStatement pstmt = conexion.prepareStatement(sql)) {
+
+            pstmt.setString(1, "BLOQUE");
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    ResponseRespuestaBloque respuestaBloque = new ResponseRespuestaBloque();
+                    respuestaBloque.setId_RespuestaTest(rs.getInt("id_respuesta_test"));
+                    respuestaBloque.setIdPreguntaTest(rs.getInt("id_pregunta_test"));
+                    respuestaBloque.setOpcion(rs.getString("opcion"));
+                    respuestaBloque.setRespuesta(rs.getString("respuesta"));
+                    respuestaBloque.setValida(rs.getInt("valida"));
+                    responseRespuestaBloqueList.add(respuestaBloque);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error al consultar respuestas de vocabulario ");
+        }
+
+        return responseRespuestaBloqueList;
     }
 }
