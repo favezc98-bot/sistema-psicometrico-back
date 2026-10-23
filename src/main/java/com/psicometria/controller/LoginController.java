@@ -1,6 +1,7 @@
 package com.psicometria.controller;
 
 import com.psicometria.model.RequestLogin;
+import com.psicometria.model.ResponseConsultarUsuario;
 import com.psicometria.service.UsuarioService;
 
 public class LoginController {
@@ -11,21 +12,22 @@ public class LoginController {
         this.usuarioService = new UsuarioService();
     }
 
-    public boolean autenticar(RequestLogin requestLogin){
+    public ResponseConsultarUsuario autenticar(RequestLogin requestLogin){
 
         if(requestLogin.getCorreo() == null || requestLogin.getPassword() == null){
             System.out.println("El correo y la contraseña son obligatorios.");
-            return false;
+            return null;
         }
 
-        boolean acceso = usuarioService.validarCredenciales(requestLogin);
+        // En lugar de devolver un boolean, le pedimos al service el usuario completo
+        ResponseConsultarUsuario consultarUsuario = usuarioService.validarCredenciales(requestLogin);
 
-        if (acceso) {
-            System.out.println("Bienvenido al sistema! ");
-            return true;
+        if (consultarUsuario != null) {
+            System.out.println("Bienvenido al sistema! Rol: " + consultarUsuario.getIdRolFk());
+            return consultarUsuario; // Retorna el objeto usuario con su id_usuario e id_rol_fk
         } else {
             System.out.println("Correo o contraseña incorrectos.");
-            return false;
+            return null;
         }
     }
 }
