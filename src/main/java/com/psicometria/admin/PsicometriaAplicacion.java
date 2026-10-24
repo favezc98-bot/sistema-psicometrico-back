@@ -1,10 +1,7 @@
 package com.psicometria.admin;
 
 import com.fasterxml.jackson.databind.ObjectMapper; // <-- Importante
-import com.psicometria.controller.AsignarEvaluacionController;
-import com.psicometria.controller.BuscarCandidatoController;
-import com.psicometria.controller.LoginController;
-import com.psicometria.controller.ObtenerCombinacionController;
+import com.psicometria.controller.*;
 import com.psicometria.model.*;
 import com.psicometria.service.PreguntaService;
 import com.psicometria.service.RespuestaService;
@@ -240,9 +237,11 @@ public class PsicometriaAplicacion {
             }
         });
 
+        //Rutas de servicios creados
         servidor.createContext("/api/evaluacion/buscar", new BuscarCandidatoController());
         servidor.createContext("/api/evaluacion/asignar", new AsignarEvaluacionController());
         servidor.createContext("/api/evaluacion/combinacion-activa", new ObtenerCombinacionController());
+        servidor.createContext("/api/evaluacion/guardar-respuestas", new GuardarRespuestasController());
 
         servidor.setExecutor(null);
         servidor.start();
