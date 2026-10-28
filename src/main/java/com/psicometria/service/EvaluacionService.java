@@ -1,7 +1,6 @@
 package com.psicometria.service;
 
 import com.psicometria.conexion.ConexionBD;
-// Asegúrate de tener o crear este DTO de apoyo
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,7 +12,7 @@ import java.util.Map;
 
 public class EvaluacionService {
 
-    // 1. Buscar candidato y retornar un Map
+    //Buscar candidato y retornar un Map
     public Map<String, Object> buscarCandidatoPorCorreo(String correo) {
         Map<String, Object> resultado = new HashMap<>();
         String sql = "SELECT c.id_candidato, c.nombre, c.apellido, u.correo " +
@@ -47,7 +46,7 @@ public class EvaluacionService {
         return resultado;
     }
 
-    // 2. Guardar asignación (Evaluador)
+    //Guardar asignación (Evaluador)
     public boolean guardarAsignacion(int idCandidato, String combinacion, String nombreEvaluador) {
         String sql = "INSERT INTO evaluacion (id_candidato_fk, combinacion, estado, fecha_evaluacion, nombre_evaluador) " +
                 "VALUES (?, ?, 'PROGRAMADA', NOW(), ?)";
