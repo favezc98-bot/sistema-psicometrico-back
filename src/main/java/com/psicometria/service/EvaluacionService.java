@@ -66,7 +66,7 @@ public class EvaluacionService {
         }
     }
 
-    // 3. Obtener la combinación solo si la evaluación sigue en estado 'PROGRAMADA'
+    //Obtener la combinación solo si la evaluación sigue en estado 'PROGRAMADA'
     public String obtenerUltimaCombinacion(int idCandidato) {
         String sql = "SELECT combinacion FROM evaluacion WHERE id_candidato_fk = ? AND estado = 'PROGRAMADA' ORDER BY id_evaluacion DESC LIMIT 1";
 
@@ -85,10 +85,11 @@ public class EvaluacionService {
         return null; // Retornar null si no hay ninguna prueba 'PROGRAMADA' activa
     }
 
-    // 4. Guardar paquete masivo de respuestas y cambiar estado a FINALIZADA
-    public boolean guardarRespuestasYFinalizar(int idCandidato, List<modelo.RespuestaCandidato> respuestas) {
+    //Guardar paquete masivo de respuestas y cambiar estado a FINALIZADA
+    // Guardar paquete masivo de respuestas usando el id_evaluacion real
+    public boolean guardarRespuestasYFinalizar(int idEvaluacion, List<modelo.RespuestaCandidato> respuestas) {
         String sqlInsert = "INSERT INTO respuesta_candidato (id_evaluacion_fk, id_pregunta_test, sub_parte, respuesta_seleccionada) VALUES (?, ?, ?, ?)";
-        String sqlUpdateEstado = "UPDATE evaluacion SET estado = 'FINALIZADA' WHERE id_candidato_fk = ? AND estado = 'PROGRAMADA'";
+        String sqlUpdateEstado = "UPDATE evaluacion SET estado = 'FINALIZADA' WHERE id_evaluacion = ?";
 
         Connection conn = null;
 
@@ -99,7 +100,7 @@ public class EvaluacionService {
             // A. Inserción masiva usando el modelo RespuestaCandidato
             try (PreparedStatement stmtInsert = conn.prepareStatement(sqlInsert)) {
                 for (modelo.RespuestaCandidato item : respuestas) {
-                    stmtInsert.setInt(1, idCandidato);
+                    stmtInsert.setInt(1, idEvaluacion); // <--- Guarda el ID de la evaluación en la FK
                     stmtInsert.setInt(2, item.getIdPreguntaTest());
                     stmtInsert.setString(3, item.getSubParte());
                     stmtInsert.setString(4, item.getRespuestaSeleccionada());
@@ -108,13 +109,13 @@ public class EvaluacionService {
                 stmtInsert.executeBatch();
             }
 
-            // B. Cambiar el estado de la evaluación a FINALIZADA
+            // B. Cambiar el estado de la evaluación a FINALIZADA usando su ID exacto
             try (PreparedStatement stmtUpdate = conn.prepareStatement(sqlUpdateEstado)) {
-                stmtUpdate.setInt(1, idCandidato);
+                stmtUpdate.setInt(1, idEvaluacion);
                 stmtUpdate.executeUpdate();
             }
 
-            conn.commit(); // Todo exitoso, guardamos cambios en BD
+            conn.commit();
             conn.close();
             return true;
 
@@ -123,7 +124,7 @@ public class EvaluacionService {
             e.printStackTrace();
             if (conn != null) {
                 try {
-                    conn.rollback(); // Si algo falla, se revierte todo
+                    conn.rollback();
                     conn.close();
                 } catch (SQLException ex) {
                     ex.printStackTrace();
@@ -131,5 +132,26 @@ public class EvaluacionService {
             }
             return false;
         }
+    }
+
+    // Obtener tanto el id_evaluacion como la combinación activa
+    public Map<String, Object> obtenerDatosUltimaEvaluacion(int idCandidato) {
+        Map<String, Object> resultado = new HashMap<>();
+        String sql = "SELECT id_evaluacion, combinacion FROM evaluacion WHERE id_candidato_fk = ? AND estado = 'PROGRAMADA' ORDER BY id_evaluacion DESC LIMIT 1";
+
+        try (Connection conn = ConexionBD.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, idCandidato);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                resultado.put("id_evaluacion", rs.getInt("id_evaluacion"));
+                resultado.put("combinacion", rs.getString("combinacion"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return resultado;
     }
 }
