@@ -35,9 +35,16 @@ public class ObtenerCombinacionController implements HttpHandler {
         // Obtener id_candidato de los parámetros de la URL (?id_candidato=1)
         String query = exchange.getRequestURI().getQuery();
         int idCandidato = 0;
-        if (query != null && query.startsWith("id_candidato=")) {
+        if (query != null && query.contains("id_candidato=")) {
             try {
-                idCandidato = Integer.parseInt(query.substring(13));
+                // Extracción más segura por si vienen más parámetros en la URL
+                String[] params = query.split("&");
+                for (String param : params) {
+                    if (param.startsWith("id_candidato=")) {
+                        idCandidato = Integer.parseInt(param.substring(13));
+                        break;
+                    }
+                }
             } catch (NumberFormatException e) {
                 idCandidato = 0;
             }
@@ -45,9 +52,17 @@ public class ObtenerCombinacionController implements HttpHandler {
 
         Map<String, Object> respuesta = new HashMap<>();
         if (idCandidato > 0) {
-            String combinacion = evaluacionService.obtenerUltimaCombinacion(idCandidato);
-            respuesta.put("encontrado", true);
-            respuesta.put("combinacion", combinacion);
+            // AQUÍ CAMBIAMOS: Llamamos a un método que nos devuelva un Map con { id_evaluacion, combinacion }
+            Map<String, Object> datosEvaluacion = evaluacionService.obtenerDatosUltimaEvaluacion(idCandidato);
+
+            if (datosEvaluacion != null && !datosEvaluacion.isEmpty()) {
+                respuesta.put("encontrado", true);
+                respuesta.put("combinacion", datosEvaluacion.get("combinacion"));
+                respuesta.put("id_evaluacion", datosEvaluacion.get("id_evaluacion")); // <--- ¡Esto faltaba!
+            } else {
+                respuesta.put("encontrado", false);
+                respuesta.put("mensaje", "No se encontró ninguna evaluación programada para este candidato.");
+            }
         } else {
             respuesta.put("encontrado", false);
             respuesta.put("mensaje", "ID de candidato no válido o no proporcionado");
@@ -59,8 +74,8 @@ public class ObtenerCombinacionController implements HttpHandler {
         byte[] responseBytes = respuestaJson.getBytes(StandardCharsets.UTF_8);
         exchange.sendResponseHeaders(200, responseBytes.length);
 
-        OutputStream os = exchange.getResponseBody();
-        os.write(responseBytes);
-        os.close();
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(responseBytes);
+        }
     }
 }
