@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 
-public class BuscarCandidatoController implements HttpHandler {
+public class CandidatoController implements HttpHandler {
 
     private final EvaluacionService evaluacionService = new EvaluacionService();
     private final ObjectMapper objectMapper = new ObjectMapper(); // Instancia de Jackson

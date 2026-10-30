@@ -2,7 +2,6 @@ package com.psicometria.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.psicometria.model.ResponseConsultarCalificacion; // Tu DTO
-import com.psicometria.model.ResponseConsultarCalificacion;
 import com.psicometria.service.PuntuacionCandidatoService;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
