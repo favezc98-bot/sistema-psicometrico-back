@@ -48,6 +48,19 @@ public class EvaluacionService {
 
     //Guardar asignación (Evaluador)
     public boolean guardarAsignacion(int idCandidato, String combinacion, String nombreEvaluador) {
+        if (combinacion == null) {
+            return false;
+        }
+
+        combinacion = combinacion.trim().toUpperCase();
+
+        // Validar que estrictamente sea una de las combinaciones soportadas por el sistema
+        if (!combinacion.equals("AB") && !combinacion.equals("A+B") &&
+                !combinacion.equals("AC") && !combinacion.equals("A+C")) {
+            System.err.println("Combinación de pruebas no válida: " + combinacion);
+            return false;
+        }
+
         String sql = "INSERT INTO evaluacion (id_candidato_fk, combinacion, estado, fecha_evaluacion, nombre_evaluador) " +
                 "VALUES (?, ?, 'PROGRAMADA', NOW(), ?)";
 
