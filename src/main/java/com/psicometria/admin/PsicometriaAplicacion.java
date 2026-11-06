@@ -242,11 +242,12 @@ public class PsicometriaAplicacion {
         servidor.createContext("/api/evaluacion/asignar", new AsignarEvaluacionController());
         servidor.createContext("/api/evaluacion/combinacion-activa", new ObtenerCombinacionController());
         servidor.createContext("/api/evaluacion/guardar-respuestas", new GuardarRespuestasController());
+        //endpoint resultados del usuario
         servidor.createContext("/api/evaluacion/consultar_puntuacion", new PuntuacionCandidatoController());
         servidor.createContext("/api/evaluacion/registro_candidato", new RegistroCandidatoController());
 
         servidor.setExecutor(null);
         servidor.start();
-        System.out.println("Servidor listo. Ya puedes probar en Postman: POST http://localhost:8080/api/login");
+        System.out.println("Servidor listo, probar en Postman: POST http://localhost:8080/api/login");
     }
 }

@@ -1,7 +1,7 @@
 package com.psicometria.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.psicometria.model.ResponseConsultarCalificacion; // Tu DTO
+import com.psicometria.model.ResponseResultadoEvaluacion;
 import com.psicometria.service.PuntuacionCandidatoService;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -15,12 +15,10 @@ import java.util.Map;
 public class PuntuacionCandidatoController implements HttpHandler {
 
     private final PuntuacionCandidatoService puntuacionCandidatoService = new PuntuacionCandidatoService();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // Constructor para inyectar el servicio si lo requieres
     public PuntuacionCandidatoController() {
     }
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
@@ -38,12 +36,13 @@ public class PuntuacionCandidatoController implements HttpHandler {
             return;
         }
 
-        // Obtener id_evaluacion de los parámetros de la URL (?id_evaluacion=1)
-        String query = exchange.getRequestURI().getQuery();
-        int idEvaluacion = 0;
-        if (query != null && query.contains("id_evaluacion=")) {
-            try {
-                // Extracción segura por si vienen más parámetros en la URL
+        Map<String, Object> respuesta = new HashMap<>();
+
+        try {
+            // Obtener id_evaluacion de los parámetros de la URL (?id_evaluacion=1)
+            String query = exchange.getRequestURI().getQuery();
+            int idEvaluacion = 0;
+            if (query != null && query.contains("id_evaluacion=")) {
                 String[] params = query.split("&");
                 for (String param : params) {
                     if (param.startsWith("id_evaluacion=")) {
@@ -51,31 +50,44 @@ public class PuntuacionCandidatoController implements HttpHandler {
                         break;
                     }
                 }
-            } catch (NumberFormatException e) {
-                idEvaluacion = 0;
             }
-        }
 
-        Map<String, Object> respuesta = new HashMap<>();
-        if (idEvaluacion > 0) {
-            //servicio para que calcule y devuelva el DTO de calificación
-            ResponseConsultarCalificacion calificacion = puntuacionCandidatoService.obtenerPuntuacionCandidato(idEvaluacion);
+            if (idEvaluacion > 0) {
+                // Servicio para que calcule y devuelva el DTO de resultados completos
+                ResponseResultadoEvaluacion calificacion = puntuacionCandidatoService.calcularResultadoCompleto(idEvaluacion);
 
-            respuesta.put("encontrado", true);
-            respuesta.put("resultado", calificacion);
-        } else {
+                respuesta.put("encontrado", true);
+                respuesta.put("resultado", calificacion);
+            } else {
+                respuesta.put("encontrado", false);
+                respuesta.put("mensaje", "ID de evaluación no válido o no proporcionado");
+            }
+
+            String respuestaJson = objectMapper.writeValueAsString(respuesta);
+
+            exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+            byte[] responseBytes = respuestaJson.getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, responseBytes.length);
+
+            OutputStream os = exchange.getResponseBody();
+            os.write(responseBytes);
+            os.close();
+
+        } catch (Exception e) {
+            // Imprime el error exacto en la consola de IntelliJ para depurar
+            e.printStackTrace();
+
             respuesta.put("encontrado", false);
-            respuesta.put("mensaje", "ID de evaluación no válido o no proporcionado");
+            respuesta.put("error", "Error interno en el servidor: " + e.getMessage());
+
+            String respuestaJson = objectMapper.writeValueAsString(respuesta);
+            exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+            byte[] responseBytes = respuestaJson.getBytes(StandardCharsets.UTF_8);
+
+            exchange.sendResponseHeaders(500, responseBytes.length);
+            OutputStream os = exchange.getResponseBody();
+            os.write(responseBytes);
+            os.close();
         }
-
-        String respuestaJson = objectMapper.writeValueAsString(respuesta);
-
-        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
-        byte[] responseBytes = respuestaJson.getBytes(StandardCharsets.UTF_8);
-        exchange.sendResponseHeaders(200, responseBytes.length);
-
-        OutputStream os = exchange.getResponseBody();
-        os.write(responseBytes);
-        os.close();
     }
 }
