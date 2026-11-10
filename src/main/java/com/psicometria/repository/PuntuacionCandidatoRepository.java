@@ -112,7 +112,7 @@ public class PuntuacionCandidatoRepository {
 
     public Map<String, Object> obtenerDatosEvaluacionYEdad(int idEvaluacion) {
         Map<String, Object> datos = new HashMap<>();
-        String sql = "SELECT e.combinacion, TIMESTAMPDIFF(YEAR, c.fecha_nacimiento, e.fecha_evaluacion) AS edad " +
+        String sql = "SELECT e.combinacion, c.nombre, c.apellido, TIMESTAMPDIFF(YEAR, c.fecha_nacimiento, e.fecha_evaluacion) AS edad " +
                 "FROM evaluacion e " +
                 "JOIN candidato c ON e.id_candidato_fk = c.id_candidato " +
                 "WHERE e.id_evaluacion = ?";
@@ -123,6 +123,8 @@ public class PuntuacionCandidatoRepository {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     datos.put("combinacion", rs.getString("combinacion"));
+                    datos.put("nombre", rs.getString("nombre"));       // <-- Agregado
+                    datos.put("apellido", rs.getString("apellido"));   // <-- Agregado
                     datos.put("edad", rs.getInt("edad"));
                 }
             }
@@ -173,7 +175,20 @@ public class PuntuacionCandidatoRepository {
             stmt.setInt(2, aciertosNaturales);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    resultado.put("puntuacionEstandar", rs.getInt("puntuacion_estandar"));
+                    // Leemos como String primero para evitar excepciones con valores como ">145" o "<70"
+                    String estandarStr = rs.getString("puntuacion_estandar");
+                    if (estandarStr != null) {
+                        // Limpiamos cualquier símbolo y dejamos solo los números
+                        String limpio = estandarStr.replaceAll("[^0-9]", "");
+                        if (!limpio.isEmpty()) {
+                            resultado.put("puntuacionEstandar", Integer.parseInt(limpio));
+                        } else {
+                            resultado.put("puntuacionEstandar", 0);
+                        }
+                    } else {
+                        resultado.put("puntuacionEstandar", null);
+                    }
+
                     resultado.put("percentil", rs.getString("percentil"));
                 }
             }
@@ -333,5 +348,32 @@ public class PuntuacionCandidatoRepository {
 
         // Si no hubo coincidencia exacta, devolvemos el aproximado inferior encontrado (ej. el de 122 para 123)
         return puntuacionTMejor;
+    }
+
+    public List<Map<String, Object>> obtenerHistorialPorCandidato(int idCandidato) {
+        List<Map<String, Object>> historial = new ArrayList<>();
+        String sql = "SELECT id_evaluacion, combinacion, estado, fecha_evaluacion " +
+                "FROM evaluacion " +
+                "WHERE id_candidato_fk = ? " +
+                "ORDER BY fecha_evaluacion DESC " +
+                "LIMIT 2";
+
+        try (Connection conn = ConexionBD.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idCandidato);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> eval = new HashMap<>();
+                    eval.put("idEvaluacion", rs.getInt("id_evaluacion"));
+                    eval.put("combinacion", rs.getString("combinacion"));
+                    eval.put("estado", rs.getString("estado"));
+                    eval.put("fechaEvaluacion", rs.getString("fecha_evaluacion"));
+                    historial.add(eval);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return historial;
     }
 }
