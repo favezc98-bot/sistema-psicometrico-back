@@ -243,6 +243,7 @@ public class PsicometriaAplicacion {
         servidor.createContext("/api/evaluacion/combinacion-activa", new ObtenerCombinacionController());
         servidor.createContext("/api/evaluacion/guardar-respuestas", new GuardarRespuestasController());
         //endpoint resultados del usuario
+        servidor.createContext("/api/evaluacion/buscar_candidato", new PuntuacionCandidatoController());
         servidor.createContext("/api/evaluacion/consultar_puntuacion", new PuntuacionCandidatoController());
         servidor.createContext("/api/evaluacion/registro_candidato", new RegistroCandidatoController());
 

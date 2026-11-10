@@ -17,10 +17,14 @@ public class PuntuacionCandidatoService {
         ResponseResultadoEvaluacion resultadoFinal = new ResponseResultadoEvaluacion();
         resultadoFinal.setIdEvaluacion(idEvaluacion);
 
-        // Obtener datos generales de la evaluación
+        // Obtener datos generales de la evaluación (Incluyendo nombre y apellido del candidato)
         Map<String, Object> datosEval = repository.obtenerDatosEvaluacionYEdad(idEvaluacion);
         String combinacion = (String) datosEval.get("combinacion");
         int edad = datosEval.get("edad") != null ? (int) datosEval.get("edad") : 0;
+
+        // Asignar nombre y apellido al DTO final
+        resultadoFinal.setNombre((String) datosEval.get("nombre"));
+        resultadoFinal.setApellido((String) datosEval.get("apellido"));
 
         combinacion = combinacion != null ? combinacion.trim().toUpperCase() : "AB";
         resultadoFinal.setCombinacion(combinacion);
@@ -97,8 +101,7 @@ public class PuntuacionCandidatoService {
         resultadoFinal.setPruebas(listaPruebas);
         resultadoFinal.setPuntajeTotal(aciertosVocab + aciertosAbst + aciertosBloques);
 
-        // Validación: Si alguna conversión individual es vacía o es 0,
-        // detenemos la combinación para no generar datos falsos.
+        // Validación: Si alguna conversión individual es vacía o es 0, detenemos la combinación
         if (convVocab == null || convVocab.isEmpty() || convSegundaPrueba == null || convSegundaPrueba.isEmpty() || estandarVocab == 0 || estandarSegundaPrueba == 0) {
             ResponseResultadoCombinado combDTO = new ResponseResultadoCombinado();
             combDTO.setSumaPuntuacionesEstandar(0);
@@ -113,7 +116,9 @@ public class PuntuacionCandidatoService {
 
         // CONVERSIÓN COMBINADA (Usando el código combinado correcto, ej. A6)
         int sumaEstandar = estandarVocab + estandarSegundaPrueba;
-        String tipoCombBusqueda = ("AB".equalsIgnoreCase(combinacion) || "A+B".equalsIgnoreCase(combinacion)) ? "AB" : "BC";
+
+        // Corregido: Debe buscar "AC" si la combinación es AC, no "BC"
+        String tipoCombBusqueda = ("AB".equalsIgnoreCase(combinacion) || "A+B".equalsIgnoreCase(combinacion)) ? "AB" : "AC";
 
         ResponseResultadoCombinado combDTO = new ResponseResultadoCombinado();
         combDTO.setSumaPuntuacionesEstandar(sumaEstandar);
@@ -121,12 +126,13 @@ public class PuntuacionCandidatoService {
         Map<String, Object> convCombinada = repository.obtenerConversionCombinada(codigoTablaCombinada, tipoCombBusqueda, sumaEstandar);
         if (convCombinada != null && !convCombinada.isEmpty()) {
             Object objEstandarComb = convCombinada.get("puntuacionEstandarCombinada");
-            combDTO.setPuntuacionEstandar(objEstandarComb != null ? objEstandarComb.toString() : "0");
+            combDTO.setPuntuacionEstandar(objEstandarComb != null ? objEstandarComb.toString() : null);
             combDTO.setPercentil((String) convCombinada.get("percentilCombinado"));
             combDTO.setCategoria("Resultado Procesado Correctamente");
             resultadoFinal.setCategoria("Resultado Procesado Correctamente");
         } else {
-            combDTO.setPuntuacionEstandar("0");
+            // Limpio: Usar null en lugar de "0" cuando no hay baremo combinado exacto
+            combDTO.setPuntuacionEstandar(null);
             combDTO.setPercentil(null);
             combDTO.setCategoria("Sin baremo combinado exacto");
             resultadoFinal.setCategoria("Sin baremo combinado exacto");
