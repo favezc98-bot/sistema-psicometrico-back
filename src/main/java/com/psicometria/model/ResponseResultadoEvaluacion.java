@@ -10,6 +10,10 @@ public class ResponseResultadoEvaluacion {
 
     private String combinacion;
 
+    private String nombre;
+
+    private String apellido;
+
     private List<ResponsePruebaDetalle> pruebas;
 
     private ResponseResultadoCombinado resultadoCombinado;
@@ -70,5 +74,19 @@ public class ResponseResultadoEvaluacion {
     }
     public void setPuntajeTotal(int puntajeTotal) {
         this.puntajeTotal = puntajeTotal;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getApellido() {
+        return apellido;
+    }
+    public void setApellido(String apellido) {
+        this.apellido = apellido;
     }
 }
