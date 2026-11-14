@@ -37,35 +37,36 @@ public class RegistroCandidatoController implements HttpHandler {
         }
 
         Map<String, Object> respuestaMap = new HashMap<>();
+        int statusCode = 200; // <--- Variable para controlar el código HTTP
 
         try {
-            // Leemos directamente el JSON del cuerpo y lo convertimos a nuestro DTO
             RequestRegistrarCandidato requestData = objectMapper.readValue(exchange.getRequestBody(), RequestRegistrarCandidato.class);
 
-            // Nota: Asegúrate de que tu DTO RequestRegistrarCandidato incluya un campo 'password'
-            // o que lo pases desde el front. Aquí asumimos que requestData.getPassword() trae la contraseña.
             boolean exito = registroCandidatoService.registrarCandidatoConUsuario(requestData, requestData.getPassword());
 
             if (exito) {
+                statusCode = 200;
                 respuestaMap.put("exito", true);
                 respuestaMap.put("mensaje", "Candidato registrado correctamente en el sistema");
             } else {
+                statusCode = 409; // 409 Conflict (ideal para datos duplicados)
                 respuestaMap.put("exito", false);
-                respuestaMap.put("mensaje", "No se pudo completar el registro del candidato");
+                respuestaMap.put("mensaje", "El correo electrónico ya se encuentra registrado en el sistema o los datos son inválidos.");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
+            statusCode = 500;
             respuestaMap.put("exito", false);
-            respuestaMap.put("error", e.getMessage());
+            respuestaMap.put("error", "Error interno en el servidor: " + e.getMessage());
         }
 
-        // 2. Convertimos la respuesta a JSON y la devolvemos
+        // Convertimos la respuesta a JSON y la devolvemos con el statusCode correspondiente
         String respuestaJson = objectMapper.writeValueAsString(respuestaMap);
 
         exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
         byte[] responseBytes = respuestaJson.getBytes(StandardCharsets.UTF_8);
-        exchange.sendResponseHeaders(200, responseBytes.length);
+        exchange.sendResponseHeaders(statusCode, responseBytes.length); // <--- Usamos statusCode en lugar de 200 fijo
 
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(responseBytes);
